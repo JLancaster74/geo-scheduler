@@ -56,24 +56,28 @@ function parseIncomingLead(body) {
     const phone = rawPhone ? `+1${rawPhone.slice(-10)}` : "";
 
     // Score based on form fields
+    // Contact form uses: primary-interest, budget, home-age, start-time, project-details
+    // Booking form uses: name, phone, address, preferred-date, preferred-time, notes
     let score = 7;
     if (d.budget && d.budget.includes("15,000")) score = 8;
     if (d.budget && (d.budget.includes("20,000") || d.budget.includes("25,000"))) score = 9;
-    if (d.interest && d.interest.toLowerCase().includes("safety")) score = Math.max(score, 8);
-    if (d["home-age"] || d.home_age) {
-      const age = d["home-age"] || d.home_age;
-      if (age.includes("50+") || age.includes("40-50")) score = Math.max(score, 8);
-    }
+    if (d.budget && (d.budget.includes("30,000") || d.budget.includes("40,000") || d.budget.includes("50,000"))) score = 10;
+    const interest = d["primary-interest"] || d.interest || "";
+    if (interest.toLowerCase().includes("safety")) score = Math.max(score, 8);
+    if (interest.toLowerCase().includes("full")) score = Math.max(score, 9);
+    const homeAge = d["home-age"] || d.home_age || "";
+    if (homeAge.includes("50+") || homeAge.includes("40-50") || homeAge.includes("40–50")) score = Math.max(score, 8);
 
     // Build notes from all available fields
     const notesParts = [];
-    if (d.interest)    notesParts.push(`Interest: ${d.interest}`);
-    if (d.budget)      notesParts.push(`Budget: ${d.budget}`);
-    if (d["home-age"] || d.home_age) notesParts.push(`Home age: ${d["home-age"] || d.home_age}`);
-    if (d["start-time"] || d.start_time) notesParts.push(`Timeline: ${d["start-time"] || d.start_time}`);
-    if (d.message)     notesParts.push(`Message: ${d.message}`);
-    if (d.date)        notesParts.push(`Requested date: ${d.date}`);
-    if (d.time)        notesParts.push(`Requested time: ${d.time}`);
+    if (interest)                    notesParts.push(`Interest: ${interest}`);
+    if (d.budget)                    notesParts.push(`Budget: ${d.budget}`);
+    if (homeAge)                     notesParts.push(`Home age: ${homeAge}`);
+    if (d["start-time"])             notesParts.push(`Timeline: ${d["start-time"]}`);
+    if (d["project-details"])        notesParts.push(`Notes: ${d["project-details"]}`);
+    if (d.notes)                     notesParts.push(`Notes: ${d.notes}`);
+    if (d["preferred-date"])         notesParts.push(`Requested date: ${d["preferred-date"]}`);
+    if (d["preferred-time"])         notesParts.push(`Requested time: ${d["preferred-time"]}`);
 
     return {
       name:    fullName  || "New Lead",
