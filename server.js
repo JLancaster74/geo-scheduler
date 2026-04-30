@@ -222,6 +222,24 @@ app.post("/api/leads", async (req, res) => {
   leads.push(lead);
   console.log(`New lead added: ${lead.name} | Score: ${lead.score} | Source: ${lead.source}`);
 
+  // ── Auto-call via Bland.ai within 90 seconds ────────────────────────────────
+  if (lead.phone && process.env.BLAND_API_KEY) {
+    axios.post("https://api.bland.ai/v1/calls", {
+      phone_number: lead.phone,
+      agent_id: "a57d9d8f-752d-4b72-96ed-fc5856152e62",
+      request_data: {
+        contact_name: lead.name,
+        street_address: lead.address,
+      },
+    }, {
+      headers: { authorization: process.env.BLAND_API_KEY },
+    }).then(() => {
+      console.log(`Bland.ai call triggered for ${lead.name}`);
+    }).catch((err) => {
+      console.error(`Bland.ai call failed for ${lead.name}:`, err.message);
+    });
+  }
+
   res.status(201).json(lead);
 });
 
