@@ -226,22 +226,22 @@ app.post("/api/leads", async (req, res) => {
   if (lead.phone && process.env.BLAND_API_KEY) {
     axios.post("https://api.bland.ai/v1/calls", {
       phone_number: lead.phone,
-      pathway_id: "a57d9d8f-752d-4b72-96ed-fc5856152e62",
-      request_data: {
-        contact_name: lead.name,
-        street_address: lead.address,
-      },
-      from: process.env.BLAND_PHONE_NUMBER || null,
+      task: `You are calling ${lead.name} who just requested a free bath and shower consultation from Jonathan Lancaster Renovations. Their address is ${lead.address}. Qualify them using your standard script and score them 1-10.`,
       voice: "maya",
       wait_for_greeting: true,
       record: true,
       max_duration: 10,
+      webhook: `${process.env.SERVER_URL}/api/webhook/bland`,
+      request_data: {
+        contact_name: lead.name,
+        street_address: lead.address,
+      },
     }, {
       headers: { authorization: process.env.BLAND_API_KEY },
     }).then(r => {
       console.log(`Bland.ai call triggered for ${lead.name} — call_id: ${r.data?.call_id}`);
     }).catch(err => {
-      console.error(`Bland.ai call failed for ${lead.name}:`, err.response?.data || err.message);
+      console.error(`Bland.ai call failed for ${lead.name}:`, JSON.stringify(err.response?.data) || err.message);
     });
   }
 
