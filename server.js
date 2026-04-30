@@ -39,9 +39,10 @@ async function geocodeAndUpdate(lead) {
 // Dashboard sends: { name, phone, address, score, notes }
 function parseIncomingLead(body) {
   // ── Netlify format ──
-  if (body.payload) {
-    const d = body.payload.data || {};
-    const formName = body.payload.form_name || "";
+  // Netlify sends form fields inside body.data (not body.payload)
+  if (body.data) {
+    const d = body.data || {};
+    const formName = body.form_name || body.title || "";
 
     // Build full name from first + last if present
     const firstName = d["first-name"] || d["first_name"] || d.name || "";
@@ -236,6 +237,12 @@ app.delete("/api/leads/:id", (req, res) => {
   if (idx === -1) return res.status(404).json({ error: "not found" });
   leads.splice(idx, 1);
   res.json({ deleted: true });
+});
+
+// ── Debug — see exact raw payload Netlify sends ───────────────────────────────
+app.post("/api/debug", (req, res) => {
+  console.log("RAW BODY:", JSON.stringify(req.body, null, 2));
+  res.json({ received: req.body });
 });
 
 // ── Health check ──────────────────────────────────────────────────────────────
