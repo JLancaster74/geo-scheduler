@@ -174,7 +174,7 @@ app.post("/api/webhook/bland", async (req, res) => {
     phone:   variables.phone_number   || "",
     address: variables.street_address || "",
     score,
-    notes:   variables.summary || `Owns: ${variables.owns_home}. Safety: ${variables.safety_concern}.`,
+    notes:   variables.summary || `Owns: ${variables.owns_home}. Safety: ${variables.safety_concern}. Partner available: ${variables.partner_available}. Financing interest: ${variables.financing_interest}.`,
     status:  "new",
     source:  "bland_ai",
     call_id,
@@ -226,7 +226,45 @@ app.post("/api/leads", async (req, res) => {
   if (lead.phone && process.env.BLAND_API_KEY) {
     axios.post("https://api.bland.ai/v1/calls", {
       phone_number: lead.phone,
-      task: `You are calling ${lead.name} who just requested a free bath and shower consultation from Jonathan Lancaster Renovations. Their address is ${lead.address}. Qualify them using your standard script and score them 1-10.`,
+      task: `You are a friendly appointment scheduler calling on behalf of Jonathan Lancaster, a bath and shower renovation specialist serving the Memphis and Southaven area. You are calling ${lead.name} who just requested a free consultation. Their address is ${lead.address}.
+
+Your goal is to qualify them and schedule a free in-home consultation. Ask these questions naturally in conversation — not like a checklist:
+
+1. Confirm their name and that they recently requested information from Jonathan Lancaster Renovations.
+
+2. "Do you own your home?" — If no, thank them and end the call politely.
+
+3. "Are you looking to update your shower or bath area?"
+
+4. "Are you dealing with any safety concerns in your tub or shower area — like slipping, difficulty getting in or out, or needing grab bars?"
+
+5. "Do you prefer to self-fund projects or would you like to hear about special financing options we offer?"
+
+6. "Do you have a significant other or partner? If so, would they be able to be part of the consultation? It's really helpful to have everyone together so we can make sure we design exactly what works for your whole household."
+
+7. "Jonathan would love to come by for a free in-home consultation — it will only take about 60 to 90 minutes to go over your options and measurements. Would you be open to scheduling that this week?"
+
+8. Confirm their full street address for the appointment.
+
+At the end of the call score the lead 1-10:
+- 10: Owns home + safety concern + wants update + partner available + open to financing + eager for appointment
+- 8-9: Owns home + one of safety or aesthetic + open to visit
+- 7: Owns home + open to consultation
+- Below 7: Renter, strongly resistant, or not interested
+
+Extract these variables:
+- lead_score: your numeric score
+- contact_name: their full name
+- phone_number: their phone number
+- street_address: their full home address
+- owns_home: yes or no
+- safety_concern: yes or no
+- partner_available: yes or no
+- financing_interest: yes or no
+- budget_ok: yes or no
+- summary: one sentence summary of the call
+
+Always be warm, respectful, and unhurried. These are homeowners 55 and older.`,
       voice: "maya",
       wait_for_greeting: true,
       record: true,
