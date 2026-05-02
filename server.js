@@ -259,7 +259,10 @@ app.post("/api/leads", async (req, res) => {
       model: "enhanced",
       language: "en-US",
     }, {
-      headers: { authorization: process.env.BLAND_API_KEY },
+      headers: {
+        authorization: process.env.BLAND_API_KEY,
+        "Content-Type": "application/json",
+      },
     }).then(r => {
       console.log(`Bland.ai call triggered for ${lead.name} — call_id: ${r.data?.call_id}`);
     }).catch(err => {
