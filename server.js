@@ -233,7 +233,7 @@ app.post("/api/leads", async (req, res) => {
     axios.post("https://api.bland.ai/v1/calls", {
       phone_number: lead.phone,
       task: `You are calling ${lead.name} who just requested a free bath and shower consultation from Jonathan Lancaster Renovations. Their address is ${lead.address}. Follow your script exactly.`,
-      voice: "maya",
+      voice: "alley",
       wait_for_greeting: true,
       record: true,
       max_duration: 10,
