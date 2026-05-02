@@ -49,12 +49,18 @@ function parseIncomingLead(body) {
     const lastName  = d["last-name"]  || d["last_name"]  || "";
     const fullName  = lastName ? `${firstName} ${lastName}`.trim() : firstName;
 
-    // Address: booking form has address field; contact form has city
-    const address = d.address || d.city || d["address-city"] || "";
+    // Build full address from individual fields
+    const street = d.street || d.address || "";
+    const city   = d.city   || "";
+    const state  = d.state  || "";
+    const zip    = d.zip    || "";
+    const address = street
+      ? [street, city, state, zip].filter(Boolean).join(", ")
+      : city || "";
 
-    // Phone — strip non-digits then reformat
+    // Phone — strip ALL non-digits then take last 10, prefix +1
     const rawPhone = (d.phone || d["phone-number"] || "").replace(/\D/g, "");
-    const phone = rawPhone ? `+1${rawPhone.slice(-10)}` : "";
+    const phone = rawPhone.length >= 10 ? `+1${rawPhone.slice(-10)}` : "";
 
     // Score based on form fields
     // Contact form uses: primary-interest, budget, home-age, start-time, project-details
@@ -300,7 +306,37 @@ app.delete("/api/leads/:id", (req, res) => {
   res.json({ deleted: true });
 });
 
-// ── Debug — see exact raw payload Netlify sends ───────────────────────────────
+// ── Free Report email ─────────────────────────────────────────────────────────
+// Triggered when someone fills out the report form on the landing page
+app.post("/api/report", async (req, res) => {
+  console.log("Report request:", JSON.stringify(req.body).slice(0, 200));
+
+  // Parse from Netlify webhook format
+  const d = req.body.data || req.body;
+  const name  = d.name  || d["your-name"] || "Friend";
+  const email = d.email || "";
+  const phone = (d.phone || "").replace(/\D/g, "");
+  const formattedPhone = phone.length >= 10 ? `+1${phone.slice(-10)}` : "";
+
+  if (!email) return res.status(400).json({ error: "email required" });
+
+  // Send notification SMS to Jonathan so he can personally follow up
+  try {
+    const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+    await client.messages.create({
+      body: `📋 FREE REPORT REQUEST\nName: ${name}\nEmail: ${email}\nPhone: ${formattedPhone || "not provided"}\n\nFollow up and send them the report!`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: process.env.YOUR_PHONE_NUMBER,
+    });
+    console.log(`Report request from ${name} — SMS sent to Jonathan`);
+  } catch (err) {
+    console.error("Report SMS failed:", err.message);
+  }
+
+  res.json({ received: true, name, email });
+});
+
+
 app.post("/api/debug", (req, res) => {
   console.log("RAW BODY:", JSON.stringify(req.body, null, 2));
   res.json({ received: req.body });
