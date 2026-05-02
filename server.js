@@ -232,35 +232,27 @@ app.post("/api/leads", async (req, res) => {
   if (lead.phone && process.env.BLAND_API_KEY) {
     axios.post("https://api.bland.ai/v1/calls", {
       phone_number: lead.phone,
-      task: `You are Christie, a warm and friendly scheduling assistant for Jonathan Lancaster Renovations in Memphis and Southaven. You are calling ${lead.name} who just requested a free bathroom consultation online. Their address is ${lead.address}. Have a natural warm conversation covering these topics: confirm they own their home (if not end politely), ask if they want to update their shower or bath area, ask about any safety concerns like slipping or difficulty getting in and out, ask if they prefer to self-fund or want to hear about financing options, ask if their spouse or partner can join the consultation, let them know the consultation is free and takes 60 to 90 minutes with no obligation and ask if they are open to it, confirm their address, then close with: Jonathan will call you personally within 24 hours to confirm. Have a wonderful day!`,
-      voice: "christie",
-      wait_for_greeting: true,
+      task: `You are Christie, a warm and friendly scheduling assistant for Jonathan Lancaster Renovations in Memphis and Southaven. You are calling ${lead.name} who just requested a free bathroom consultation online. Their address is ${lead.address}. Have a natural warm conversation covering these topics: confirm they own their home (if not end politely), ask if they want to update their shower or bath area, ask about any safety concerns like slipping or difficulty getting in and out of the tub, ask if they prefer to self-fund or want to hear about financing options, ask if their spouse or partner can join the consultation, let them know the consultation is free and takes 60 to 90 minutes with no obligation and ask if they are open to it, confirm their address, then close with: Jonathan will call you personally within 24 hours to confirm. Have a wonderful day!`,
+      voice: "d733d3e9-b2b4-4f46-a678-3fc878293c33",
+      wait_for_greeting: false,
       record: true,
-      max_duration: 10,
+      answered_by_enabled: true,
+      noise_cancellation: true,
+      interruption_threshold: 500,
+      block_interruptions: false,
+      max_duration: 12,
+      model: "base",
+      language: "babel-en",
+      background_track: "none",
       from: process.env.BLAND_PHONE_NUMBER || undefined,
       webhook: `${process.env.SERVER_URL}/api/webhook/bland`,
-      background_track: "none",
-      model: "enhanced",
       request_data: {
         contact_name: lead.name,
         street_address: lead.address,
       },
-    }, {
-      wait_for_greeting: true,
-      record: true,
-      max_duration: 10,
-      from: process.env.BLAND_PHONE_NUMBER || undefined,
-      webhook: `${process.env.SERVER_URL}/api/webhook/bland`,
-      background_track: "none",
-      request_data: {
-        contact_name: lead.name,
-        street_address: lead.address,
-      },
-      model: "enhanced",
-      language: "en-US",
     }, {
       headers: {
-        authorization: process.env.BLAND_API_KEY,
+        Authorization: process.env.BLAND_API_KEY,
         "Content-Type": "application/json",
       },
     }).then(r => {
