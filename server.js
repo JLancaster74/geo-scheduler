@@ -232,16 +232,19 @@ app.post("/api/leads", async (req, res) => {
   if (lead.phone && process.env.BLAND_API_KEY) {
     axios.post("https://api.bland.ai/v1/calls", {
       phone_number: lead.phone,
-      task: `You are calling ${lead.name} who just requested a free bath and shower consultation from Jonathan Lancaster Renovations. Their address is ${lead.address}. Follow your script exactly.`,
-      voice: "alley",
+      voice: "christie",
       wait_for_greeting: true,
       record: true,
       max_duration: 10,
+      from: process.env.BLAND_PHONE_NUMBER || undefined,
       webhook: `${process.env.SERVER_URL}/api/webhook/bland`,
+      background_track: "none",
       request_data: {
         contact_name: lead.name,
         street_address: lead.address,
       },
+      model: "enhanced",
+      language: "en-US",
     }, {
       headers: { authorization: process.env.BLAND_API_KEY },
     }).then(r => {
