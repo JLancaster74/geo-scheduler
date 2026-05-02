@@ -252,6 +252,8 @@ Your goal is to qualify them and schedule a free in-home consultation. Ask these
 
 8. Confirm their full street address for the appointment.
 
+9. Close every call with this exact phrase: "Wonderful! Please expect a personal call from Jonathan himself within the next 24 hours to confirm your appointment details. We truly look forward to visiting your home."
+
 At the end of the call score the lead 1-10:
 - 10: Owns home + safety concern + wants update + partner available + open to financing + eager for appointment
 - 8-9: Owns home + one of safety or aesthetic + open to visit
@@ -271,7 +273,7 @@ Extract these variables:
 - summary: one sentence summary of the call
 
 Always be warm, respectful, and unhurried. These are homeowners 55 and older.`,
-      voice: "maya",
+      from: process.env.BLAND_PHONE_NUMBER || undefined,
       wait_for_greeting: true,
       record: true,
       max_duration: 10,
@@ -307,11 +309,9 @@ app.delete("/api/leads/:id", (req, res) => {
 });
 
 // ── Free Report email ─────────────────────────────────────────────────────────
-// Triggered when someone fills out the report form on the landing page
 app.post("/api/report", async (req, res) => {
   console.log("Report request:", JSON.stringify(req.body).slice(0, 200));
 
-  // Parse from Netlify webhook format
   const d = req.body.data || req.body;
   const name  = d.name  || d["your-name"] || "Friend";
   const email = d.email || "";
@@ -320,15 +320,79 @@ app.post("/api/report", async (req, res) => {
 
   if (!email) return res.status(400).json({ error: "email required" });
 
-  // Send notification SMS to Jonathan so he can personally follow up
+  // ── Send report email via SendGrid ──────────────────────────────────────────
+  if (process.env.SENDGRID_API_KEY) {
+    try {
+      await axios.post("https://api.sendgrid.com/v3/mail/send", {
+        personalizations: [{
+          to: [{ email, name }],
+          subject: `Your Free Report: 10 Hidden Dangers in Bathroom Renovations`,
+        }],
+        from: {
+          email: process.env.FROM_EMAIL || "jonathan@jonathanlancasterremodeling.com",
+          name: "Jonathan Lancaster Renovations",
+        },
+        content: [{
+          type: "text/html",
+          value: `
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#333">
+              <div style="background:#1a1a2e;padding:30px;text-align:center">
+                <h1 style="color:#C9A96E;margin:0;font-size:24px">Jonathan Lancaster Renovations</h1>
+                <p style="color:#aaa;margin:8px 0 0">Bath & Shower Specialists · Memphis/Southaven</p>
+              </div>
+              <div style="padding:32px 24px">
+                <p style="font-size:16px">Hi ${name},</p>
+                <p>Thank you for requesting our free report. Here are the <strong>10 Hidden Dangers in Bathroom Renovations</strong> that every homeowner should know before hiring a contractor:</p>
+                <ol style="line-height:2;font-size:15px">
+                  <li><strong>Unlicensed contractors</strong> — always verify licensing with your state board</li>
+                  <li><strong>No permit pulled</strong> — unpermitted work can void your homeowner's insurance</li>
+                  <li><strong>Cheap waterproofing</strong> — leads to mold and structural damage within 2 years</li>
+                  <li><strong>Wrong tile adhesive</strong> — tiles crack and pop off within months</li>
+                  <li><strong>No slip resistance testing</strong> — wet floors are the #1 cause of bathroom falls</li>
+                  <li><strong>Ignoring grab bar blocking</strong> — walls need reinforcement to hold grab bars safely</li>
+                  <li><strong>Undersized water heater</strong> — walk-in showers need more hot water capacity</li>
+                  <li><strong>Poor ventilation planning</strong> — inadequate fans cause mold within 6 months</li>
+                  <li><strong>No written warranty</strong> — reputable contractors always provide written coverage</li>
+                  <li><strong>Skipping the consultation</strong> — rushing into a decision without seeing all options costs thousands</li>
+                </ol>
+                <div style="background:#f9f5ef;border-left:4px solid #C9A96E;padding:20px;margin:24px 0;border-radius:4px">
+                  <p style="margin:0;font-size:15px"><strong>The best way to avoid all 10?</strong> Schedule a free in-home consultation with Jonathan. He'll walk through your bathroom, identify any concerns, and show you exactly what's possible — with no pressure and no obligation.</p>
+                </div>
+                <p style="text-align:center;margin:32px 0">
+                  <a href="https://jonathanlancasterremodeling.netlify.app/#schedule" 
+                     style="background:#C9A96E;color:#1a1a2e;padding:14px 32px;border-radius:4px;text-decoration:none;font-weight:bold;font-size:16px">
+                    Schedule My Free Consultation →
+                  </a>
+                </p>
+                <p style="font-size:14px;color:#666">Questions? Call Jonathan directly at <strong>662-782-1777</strong> or simply reply to this email.</p>
+              </div>
+              <div style="background:#f5f5f5;padding:16px;text-align:center;font-size:12px;color:#999">
+                Jonathan Lancaster Renovations · Serving Memphis & Southaven Metro<br>
+                662-782-1777 · jonathanlancasterremodeling.netlify.app
+              </div>
+            </div>
+          `,
+        }],
+      }, {
+        headers: {
+          Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      });
+      console.log(`Report email sent to ${email}`);
+    } catch (err) {
+      console.error("SendGrid email failed:", err.response?.data || err.message);
+    }
+  }
+
+  // Always SMS Jonathan so he knows someone requested the report
   try {
     const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
     await client.messages.create({
-      body: `📋 FREE REPORT REQUEST\nName: ${name}\nEmail: ${email}\nPhone: ${formattedPhone || "not provided"}\n\nFollow up and send them the report!`,
+      body: `📋 FREE REPORT REQUEST\nName: ${name}\nEmail: ${email}\nPhone: ${formattedPhone || "not provided"}`,
       from: process.env.TWILIO_PHONE_NUMBER,
       to: process.env.YOUR_PHONE_NUMBER,
     });
-    console.log(`Report request from ${name} — SMS sent to Jonathan`);
   } catch (err) {
     console.error("Report SMS failed:", err.message);
   }
