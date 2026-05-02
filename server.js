@@ -232,12 +232,20 @@ app.post("/api/leads", async (req, res) => {
   if (lead.phone && process.env.BLAND_API_KEY) {
     axios.post("https://api.bland.ai/v1/calls", {
       phone_number: lead.phone,
-      task: `You are Christie, a warm friendly scheduling assistant for Jonathan Lancaster Renovations in Memphis and Southaven. Call ${lead.name} who requested a free bathroom consultation. Their address is ${lead.address}. Have a natural warm conversation — not robotic. Cover all of these in order: 1) Introduce yourself and confirm they requested info from Jonathan Lancaster Renovations. 2) Ask if they own their home — if no, thank them and end politely. 3) Ask if they want to update their shower or bath area. 4) Ask if they have safety concerns like slipping or difficulty getting in and out of the tub. 5) Ask if they prefer to self-fund or would like to hear about financing options. 6) Ask if they have a spouse or partner and if that person can join the consultation. 7) Tell them the consultation is free, 60 to 90 minutes, no obligation, and ask if they are open to it. 8) Confirm their address. 9) Close with exactly this: "Jonathan will call you personally within the next 24 hours to confirm your visit. We truly look forward to meeting you. Have a wonderful day!" Never ask for a specific date or time.`,
+      task: `You are Christie, a warm and friendly scheduling assistant for Jonathan Lancaster Renovations in Memphis and Southaven. You are calling ${lead.name} who just requested a free bathroom consultation online. Their address is ${lead.address}. Have a natural warm conversation covering these topics: confirm they own their home (if not end politely), ask if they want to update their shower or bath area, ask about any safety concerns like slipping or difficulty getting in and out, ask if they prefer to self-fund or want to hear about financing options, ask if their spouse or partner can join the consultation, let them know the consultation is free and takes 60 to 90 minutes with no obligation and ask if they are open to it, confirm their address, then close with: Jonathan will call you personally within 24 hours to confirm. Have a wonderful day!`,
       voice: "christie",
-      reduce_latency: true,
       wait_for_greeting: true,
       record: true,
       max_duration: 10,
+      from: process.env.BLAND_PHONE_NUMBER || undefined,
+      webhook: `${process.env.SERVER_URL}/api/webhook/bland`,
+      background_track: "none",
+      model: "enhanced",
+      request_data: {
+        contact_name: lead.name,
+        street_address: lead.address,
+      },
+    }, {
       wait_for_greeting: true,
       record: true,
       max_duration: 10,
