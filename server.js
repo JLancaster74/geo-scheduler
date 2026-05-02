@@ -232,6 +232,7 @@ app.post("/api/leads", async (req, res) => {
   if (lead.phone && process.env.BLAND_API_KEY) {
     axios.post("https://api.bland.ai/v1/calls", {
       phone_number: lead.phone,
+      task: `Call ${lead.name} who requested a free bath and shower consultation from Jonathan Lancaster Renovations. Their address is ${lead.address}. You are Christie — warm, bubbly, and conversational. Follow your persona script exactly, ask all questions naturally, and close with: "Please expect a personal call from Jonathan himself within the next 24 hours to confirm your appointment details. We truly look forward to visiting your home."`,
       voice: "christie",
       wait_for_greeting: true,
       record: true,
