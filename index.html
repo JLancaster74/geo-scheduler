@@ -4,8 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The 80% Closer — Sales Training Platform</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Open+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:'Open Sans',sans-serif;}
@@ -87,7 +86,7 @@ input,select,textarea{font-family:'Open Sans',sans-serif;outline:none;}
 </head>
 <body>
 <script>
-const SUPABASE_URL ='https://catojwzebxyjlyqifkiv.supabase.co/rest/v1/';
+const SUPABASE_URL = 'https://catojwzebxyjlyqifkiv.supabase.co';
 const SUPABASE_KEY ='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNhdG9qd3plYnh5amx5cWlma2l2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxMjU1NTcsImV4cCI6MjA5MzcwMTU1N30.jemXItOIaoWoJdx7yKxRhIEsexBttxCqyVeLLPyW6ss';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 </script>
